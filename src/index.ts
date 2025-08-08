@@ -2,7 +2,7 @@
 /**
  * Clear Thought MCP Server - Main Entry Point
  * 
- * Unified server supporting stdio, HTTP, and Smithery transports
+ * Unified server supporting stdio and HTTP transports
  */
 
 import { ClearThoughtUnifiedServer } from './unified-server.js';
@@ -15,8 +15,8 @@ export default function createClearThoughtServer(config?: any) {
     config
   });
   
-  // For MCP/Smithery compatibility, return the MCP server instance
-  if (config?.transport === 'smithery' || config?.returnMcpServer) {
+  // For host-managed HTTP environments, return the MCP server instance
+  if (config?.returnMcpServer) {
     return server.getMcpServer();
   }
   

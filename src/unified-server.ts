@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Server as McpServer } from '@modelcontextprotocol/sdk/server/index.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { randomUUID } from 'node:crypto';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -30,13 +30,13 @@ const TOOL_MODULES: Record<string, () => Promise<unknown>> = {
 };
 
 export interface UnifiedServerOptions {
-  transport?: 'stdio' | 'http' | 'smithery';
+  transport?: 'stdio' | 'http';
   port?: number;
   config?: ServerConfig;
 }
 
 export class ClearThoughtUnifiedServer {
-  private mcpServer: McpServer;
+  private mcpServer: Server;
   private sessionManager: SessionManager;
   private toolRegistry: ToolRegistry;
   private options: UnifiedServerOptions;
@@ -52,7 +52,7 @@ export class ClearThoughtUnifiedServer {
     this.sessionManager = new SessionManager();
     
     // Create MCP server
-    this.mcpServer = new McpServer(
+    this.mcpServer = new Server(
       {
         name: 'clear-thought',
         version: '1.0.0'
@@ -106,8 +106,6 @@ export class ClearThoughtUnifiedServer {
       await Promise.all(Object.values(TOOL_MODULES).map(fn => fn()));
       return { tools: this.toolRegistry.toMCPTools() };
     });
-    
-    // No resources served
   }
   
   async start(): Promise<void> {
@@ -115,11 +113,9 @@ export class ClearThoughtUnifiedServer {
       case 'stdio':
         await this.startStdio();
         break;
-      case 'http':
-        // For HTTP, return the MCP server and let the host environment provide the HTTP transport
-        return this.mcpServer as any;
-      case 'smithery':
-        return this.mcpServer as any;
+    case 'http':
+      // For HTTP, return the MCP server and let the host environment provide the HTTP transport
+      return this.mcpServer as any;
     }
   }
   
@@ -133,7 +129,7 @@ export class ClearThoughtUnifiedServer {
   // platform (e.g., Smithery) should own the HTTP listener and use the MCP transport.
   
   // For Smithery export
-  getMcpServer(): McpServer {
+  getMcpServer(): Server {
     return this.mcpServer;
   }
 }
