@@ -5,7 +5,6 @@
  * with efficient indexing and querying capabilities.
  */
 
-import { BaseStore } from './BaseStore.js';
 import { IdGenerator } from '../utils/IdGenerator.js';
 import {
   ThoughtData,
@@ -113,7 +112,10 @@ export const TypeGuards = {
 /**
  * Unified store for all data types with type-safe operations
  */
-export class UnifiedStore extends BaseStore<StorageEntry> {
+export class UnifiedStore {
+  // Internal storage map and store name (inlined from BaseStore)
+  private data: Map<string, StorageEntry>;
+  private readonly storeName: string;
   // Type-specific indexes for efficient queries
   private typeIndexes: Map<DataTypeTag, Set<string>>;
   
@@ -125,13 +127,76 @@ export class UnifiedStore extends BaseStore<StorageEntry> {
   private inquiryIndex: Map<string, string> = new Map();
   
   constructor() {
-    super('UnifiedStore');
+    this.storeName = 'UnifiedStore';
+    this.data = new Map<string, StorageEntry>();
     this.typeIndexes = new Map();
     
     // Initialize indexes for all types
     Object.values(DataTypeTag).forEach(type => {
       this.typeIndexes.set(type, new Set());
     });
+  }
+
+  // -------- Inlined generic store utilities (from BaseStore) --------
+
+  get(id: string): StorageEntry | undefined {
+    return this.data.get(id);
+  }
+
+  has(id: string): boolean {
+    return this.data.has(id);
+  }
+
+  delete(id: string): boolean {
+    return this.data.delete(id);
+  }
+
+  size(): number {
+    return this.data.size;
+  }
+
+  export(): Record<string, StorageEntry> {
+    const result: Record<string, StorageEntry> = {};
+    this.data.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+
+  import(data: Record<string, StorageEntry>): void {
+    this.clear();
+    Object.entries(data).forEach(([key, value]) => {
+      this.add(key, value);
+    });
+  }
+
+  keys(): string[] {
+    return Array.from(this.data.keys());
+  }
+
+  values(): StorageEntry[] {
+    return Array.from(this.data.values());
+  }
+
+  forEach(callback: (value: StorageEntry, key: string) => void): void {
+    this.data.forEach(callback);
+  }
+
+  filter(predicate: (item: StorageEntry) => boolean): StorageEntry[] {
+    return this.values().filter(predicate);
+  }
+
+  find(predicate: (item: StorageEntry) => boolean): StorageEntry | undefined {
+    return this.values().find(predicate);
+  }
+
+  update(id: string, updater: (item: StorageEntry) => StorageEntry): boolean {
+    const item = this.get(id);
+    if (item) {
+      this.add(id, updater(item));
+      return true;
+    }
+    return false;
   }
   
   /**
