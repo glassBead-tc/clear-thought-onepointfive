@@ -18,11 +18,3 @@ server.start().catch(error => {
   console.error('Failed to start Smithery server:', error);
   process.exit(1);
 });
-
-// Export for Smithery SDK if needed
-export default function createSmitheryServer() {
-  const server = new ClearThoughtUnifiedServer({
-    transport: 'smithery'
-  });
-  return server.getMcpServer();
-}
