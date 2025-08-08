@@ -6,9 +6,9 @@
  */
 
 import { ServerConfig } from '../config.js';
-import { 
-  ThoughtData, 
-  MentalModelData, 
+import {
+  ThoughtData,
+  MentalModelData,
   DebuggingSession,
   CollaborativeSession,
   DecisionData,
@@ -21,18 +21,9 @@ import {
   ArgumentData,
   SocraticData
 } from '../types/index.js';
+import { UnifiedStore, DataTypeTag } from './stores/UnifiedStore.js';
 
-// Import all stores
-import { ThoughtStore } from './stores/ThoughtStore.js';
-import { MentalModelStore } from './stores/MentalModelStore.js';
-import { DebuggingStore } from './stores/DebuggingStore.js';
-import { CollaborativeStore } from './stores/CollaborativeStore.js';
-import { DecisionStore } from './stores/DecisionStore.js';
-import { MetacognitiveStore } from './stores/MetacognitiveStore.js';
-import { ScientificStore } from './stores/ScientificStore.js';
-import { CreativeStore } from './stores/CreativeStore.js';
-import { SystemsStore } from './stores/SystemsStore.js';
-import { VisualStore } from './stores/VisualStore.js';
+// Using a single unified store for all tool data
 
 /**
  * Comprehensive session statistics
@@ -79,17 +70,8 @@ export class SessionState {
   /** Timeout timer reference */
   private timeoutTimer?: NodeJS.Timeout;
   
-  /** Data stores */
-  private readonly thoughtStore: ThoughtStore;
-  private readonly mentalModelStore: MentalModelStore;
-  private readonly debuggingStore: DebuggingStore;
-  private readonly collaborativeStore: CollaborativeStore;
-  private readonly decisionStore: DecisionStore;
-  private readonly metacognitiveStore: MetacognitiveStore;
-  private readonly scientificStore: ScientificStore;
-  private readonly creativeStore: CreativeStore;
-  private readonly systemsStore: SystemsStore;
-  private readonly visualStore: VisualStore;
+  /** Unified memory store */
+  private readonly store: UnifiedStore;
   
   /**
    * Create a new session state
@@ -102,17 +84,8 @@ export class SessionState {
     this.createdAt = new Date();
     this.lastAccessedAt = new Date();
     
-    // Initialize all stores
-    this.thoughtStore = new ThoughtStore();
-    this.mentalModelStore = new MentalModelStore();
-    this.debuggingStore = new DebuggingStore();
-    this.collaborativeStore = new CollaborativeStore();
-    this.decisionStore = new DecisionStore();
-    this.metacognitiveStore = new MetacognitiveStore();
-    this.scientificStore = new ScientificStore();
-    this.creativeStore = new CreativeStore();
-    this.systemsStore = new SystemsStore();
-    this.visualStore = new VisualStore();
+    // Initialize unified store
+    this.store = new UnifiedStore();
     
     // Start timeout timer
     this.resetTimeout();
@@ -153,12 +126,12 @@ export class SessionState {
     this.touch();
     
     // Check thought limit
-    if (this.thoughtStore.size() >= this.config.maxThoughtsPerSession) {
+    if (this.store.getThoughts().length >= this.config.maxThoughtsPerSession) {
       return false;
     }
     
     const id = `thought-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.thoughtStore.add(id, thought);
+    this.store.add(id, thought);
     return true;
   }
   
@@ -167,14 +140,14 @@ export class SessionState {
    */
   getThoughts(): ThoughtData[] {
     this.touch();
-    return this.thoughtStore.getAll();
+    return this.store.getThoughts();
   }
   
   /**
    * Get remaining thought capacity
    */
   getRemainingThoughts(): number {
-    return Math.max(0, this.config.maxThoughtsPerSession - this.thoughtStore.size());
+    return Math.max(0, this.config.maxThoughtsPerSession - this.store.getThoughts().length);
   }
   
   // ============================================================================
@@ -187,7 +160,7 @@ export class SessionState {
   addMentalModel(model: MentalModelData): void {
     this.touch();
     const id = `model-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.mentalModelStore.add(id, model);
+    this.store.add(id, model);
   }
   
   /**
@@ -195,7 +168,7 @@ export class SessionState {
    */
   getMentalModels(): MentalModelData[] {
     this.touch();
-    return this.mentalModelStore.getAll();
+    return this.store.getMentalModels();
   }
   
   // ============================================================================
@@ -208,7 +181,7 @@ export class SessionState {
   addDebuggingSession(session: DebuggingSession): void {
     this.touch();
     const id = `debug-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.debuggingStore.add(id, session);
+    this.store.add(id, session);
   }
   
   /**
@@ -216,7 +189,7 @@ export class SessionState {
    */
   getDebuggingSessions(): DebuggingSession[] {
     this.touch();
-    return this.debuggingStore.getAll();
+    return this.store.getDebuggingSessions();
   }
   
   // ============================================================================
@@ -229,7 +202,7 @@ export class SessionState {
   addCollaborativeSession(session: CollaborativeSession): void {
     this.touch();
     const id = `collab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.collaborativeStore.add(id, session);
+    this.store.add(id, session);
   }
   
   /**
@@ -237,7 +210,7 @@ export class SessionState {
    */
   getCollaborativeSessions(): CollaborativeSession[] {
     this.touch();
-    return this.collaborativeStore.getAll();
+    return this.store.getCollaborativeSessions();
   }
   
   /**
@@ -245,7 +218,8 @@ export class SessionState {
    */
   getCollaborativeSession(sessionId: string): CollaborativeSession | undefined {
     this.touch();
-    return this.collaborativeStore.find(s => s.sessionId === sessionId);
+    const sessions = this.store.getCollaborativeSessions();
+    return sessions.find(s => s.sessionId === sessionId);
   }
   
   // ============================================================================
@@ -258,7 +232,7 @@ export class SessionState {
   addDecision(decision: DecisionData): void {
     this.touch();
     const id = `decision-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.decisionStore.add(id, decision);
+    this.store.add(id, decision);
   }
   
   /**
@@ -266,7 +240,7 @@ export class SessionState {
    */
   getDecisions(): DecisionData[] {
     this.touch();
-    return this.decisionStore.getAll();
+    return this.store.getDecisions();
   }
   
   /**
@@ -274,7 +248,8 @@ export class SessionState {
    */
   getDecision(decisionId: string): DecisionData | undefined {
     this.touch();
-    return this.decisionStore.find(d => d.decisionId === decisionId);
+    const decisions = this.store.getDecisions();
+    return decisions.find(d => d.decisionId === decisionId);
   }
   
   // ============================================================================
@@ -287,7 +262,7 @@ export class SessionState {
   addMetacognitive(session: MetacognitiveData): void {
     this.touch();
     const id = `meta-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.metacognitiveStore.add(id, session);
+    this.store.add(id, session);
   }
   
   /**
@@ -295,7 +270,7 @@ export class SessionState {
    */
   getMetacognitiveSessions(): MetacognitiveData[] {
     this.touch();
-    return this.metacognitiveStore.getAll();
+    return this.store.getMetacognitiveSessions();
   }
   
   /**
@@ -303,7 +278,8 @@ export class SessionState {
    */
   getMetacognitiveSession(monitoringId: string): MetacognitiveData | undefined {
     this.touch();
-    return this.metacognitiveStore.find(m => m.monitoringId === monitoringId);
+    const meta = this.store.getMetacognitiveSessions();
+    return meta.find(m => m.monitoringId === monitoringId);
   }
   
   // ============================================================================
@@ -316,7 +292,7 @@ export class SessionState {
   addScientificInquiry(inquiry: ScientificInquiryData): void {
     this.touch();
     const id = `sci-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.scientificStore.add(id, inquiry);
+    this.store.add(id, inquiry);
   }
   
   /**
@@ -324,7 +300,7 @@ export class SessionState {
    */
   getScientificInquiries(): ScientificInquiryData[] {
     this.touch();
-    return this.scientificStore.getAll();
+    return this.store.getScientificInquiries();
   }
   
   /**
@@ -332,7 +308,8 @@ export class SessionState {
    */
   getScientificInquiry(inquiryId: string): ScientificInquiryData | undefined {
     this.touch();
-    return this.scientificStore.find(i => i.inquiryId === inquiryId);
+    const inquiries = this.store.getScientificInquiries();
+    return inquiries.find(i => i.inquiryId === inquiryId);
   }
   
   // ============================================================================
@@ -345,7 +322,7 @@ export class SessionState {
   addCreativeSession(session: CreativeData): void {
     this.touch();
     const id = `creative-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.creativeStore.add(id, session);
+    this.store.add(id, session);
   }
   
   /**
@@ -353,7 +330,7 @@ export class SessionState {
    */
   getCreativeSessions(): CreativeData[] {
     this.touch();
-    return this.creativeStore.getAll();
+    return this.store.getCreativeSessions();
   }
   
   // ============================================================================
@@ -366,7 +343,7 @@ export class SessionState {
   addSystemsAnalysis(system: SystemsData): void {
     this.touch();
     const id = `systems-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.systemsStore.add(id, system);
+    this.store.add(id, system);
   }
   
   /**
@@ -374,7 +351,7 @@ export class SessionState {
    */
   getSystemsAnalyses(): SystemsData[] {
     this.touch();
-    return this.systemsStore.getAll();
+    return this.store.getSystemsAnalyses();
   }
   
   // ============================================================================
@@ -387,7 +364,7 @@ export class SessionState {
   addVisualOperation(visual: VisualData): void {
     this.touch();
     const id = `visual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    this.visualStore.add(id, visual);
+    this.store.add(id, visual);
   }
   
   /**
@@ -395,7 +372,7 @@ export class SessionState {
    */
   getVisualOperations(): VisualData[] {
     this.touch();
-    return this.visualStore.getAll();
+    return this.store.getVisualOperations();
   }
   
   /**
@@ -403,7 +380,7 @@ export class SessionState {
    */
   getVisualDiagram(diagramId: string): VisualData[] {
     this.touch();
-    return this.visualStore.getByDiagram(diagramId);
+    return this.store.getVisualDiagram(diagramId);
   }
   
   // ============================================================================
@@ -445,68 +422,59 @@ export class SessionState {
     let totalOperations = 0;
     
     // Check which tools have been used
-    if (this.thoughtStore.size() > 0) {
+    if (this.store.getThoughts().length > 0) {
       toolsUsed.add('sequential-thinking');
-      totalOperations += this.thoughtStore.size();
+      totalOperations += this.store.getThoughts().length;
     }
-    if (this.mentalModelStore.size() > 0) {
+    if (this.store.getMentalModels().length > 0) {
       toolsUsed.add('mental-models');
-      totalOperations += this.mentalModelStore.size();
+      totalOperations += this.store.getMentalModels().length;
     }
-    if (this.debuggingStore.size() > 0) {
+    if (this.store.getDebuggingSessions().length > 0) {
       toolsUsed.add('debugging');
-      totalOperations += this.debuggingStore.size();
+      totalOperations += this.store.getDebuggingSessions().length;
     }
-    if (this.collaborativeStore.size() > 0) {
+    if (this.store.getCollaborativeSessions().length > 0) {
       toolsUsed.add('collaborative-reasoning');
-      totalOperations += this.collaborativeStore.size();
+      totalOperations += this.store.getCollaborativeSessions().length;
     }
-    if (this.decisionStore.size() > 0) {
+    if (this.store.getDecisions().length > 0) {
       toolsUsed.add('decision-framework');
-      totalOperations += this.decisionStore.size();
+      totalOperations += this.store.getDecisions().length;
     }
-    if (this.metacognitiveStore.size() > 0) {
+    if (this.store.getMetacognitiveSessions().length > 0) {
       toolsUsed.add('metacognitive-monitoring');
-      totalOperations += this.metacognitiveStore.size();
+      totalOperations += this.store.getMetacognitiveSessions().length;
     }
-    if (this.scientificStore.size() > 0) {
+    if (this.store.getScientificInquiries().length > 0) {
       toolsUsed.add('scientific-method');
-      totalOperations += this.scientificStore.size();
+      totalOperations += this.store.getScientificInquiries().length;
     }
-    if (this.creativeStore.size() > 0) {
+    if (this.store.getCreativeSessions().length > 0) {
       toolsUsed.add('creative-thinking');
-      totalOperations += this.creativeStore.size();
+      totalOperations += this.store.getCreativeSessions().length;
     }
-    if (this.systemsStore.size() > 0) {
+    if (this.store.getSystemsAnalyses().length > 0) {
       toolsUsed.add('systems-thinking');
-      totalOperations += this.systemsStore.size();
+      totalOperations += this.store.getSystemsAnalyses().length;
     }
-    if (this.visualStore.size() > 0) {
+    if (this.store.getVisualOperations().length > 0) {
       toolsUsed.add('visual-reasoning');
-      totalOperations += this.visualStore.size();
+      totalOperations += this.store.getVisualOperations().length;
     }
     
     return {
       sessionId: this.sessionId,
       createdAt: this.createdAt,
       lastAccessedAt: this.lastAccessedAt,
-      thoughtCount: this.thoughtStore.size(),
+      thoughtCount: this.store.getThoughts().length,
       toolsUsed: Array.from(toolsUsed),
       totalOperations,
       isActive: !!this.timeoutTimer,
       remainingThoughts: this.getRemainingThoughts(),
       stores: {
-        thoughts: this.thoughtStore.getStatistics(),
-        mentalModels: this.mentalModelStore.getStatistics(),
-        debugging: this.debuggingStore.getStatistics(),
-        collaborative: this.collaborativeStore.getStatistics(),
-        decisions: this.decisionStore.getStatistics(),
-        metacognitive: this.metacognitiveStore.getStatistics(),
-        scientific: this.scientificStore.getStatistics(),
-        creative: this.creativeStore.getStatistics(),
-        systems: this.systemsStore.getStatistics(),
-        visual: this.visualStore.getStatistics()
-      }
+        byType: this.store.getStatsByType()
+      } as any
     };
   }
   
@@ -524,42 +492,69 @@ export class SessionState {
       sessionId: this.sessionId
     };
     
-    // Export specific store if requested
+    // Export specific store if requested (via unified store)
     if (storeType) {
       const exports: SessionExport[] = [];
-      
       switch (storeType) {
         case 'thoughts':
-          this.thoughtStore.getAll().forEach(thought => {
-            exports.push({
-              ...baseExport,
-              sessionType: 'sequential',
-              data: thought
-            });
+          this.store.getThoughts().forEach((thought) => {
+            exports.push({ ...baseExport, sessionType: 'sequential', data: thought });
           });
           break;
-          
         case 'mentalModels':
-          this.mentalModelStore.getAll().forEach(model => {
-            exports.push({
-              ...baseExport,
-              sessionType: 'mental-model',
-              data: model
-            });
+          this.store.getMentalModels().forEach((model) => {
+            exports.push({ ...baseExport, sessionType: 'mental-model', data: model });
           });
           break;
-          
-        // Add other cases as needed...
+        case 'debugging':
+          this.store.getDebuggingSessions().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'debugging', data: item });
+          });
+          break;
+        case 'collaborative':
+          this.store.getCollaborativeSessions().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'collaborative', data: item });
+          });
+          break;
+        case 'decision':
+          this.store.getDecisions().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'decision', data: item });
+          });
+          break;
+        case 'metacognitive':
+          this.store.getMetacognitiveSessions().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'metacognitive', data: item });
+          });
+          break;
+        case 'scientific':
+          this.store.getScientificInquiries().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'scientific', data: item });
+          });
+          break;
+        case 'creative':
+          this.store.getCreativeSessions().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'creative', data: item });
+          });
+          break;
+        case 'systems':
+          this.store.getSystemsAnalyses().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'systems', data: item });
+          });
+          break;
+        case 'visual':
+          this.store.getVisualOperations().forEach((item) => {
+            exports.push({ ...baseExport, sessionType: 'visual', data: item });
+          });
+          break;
       }
-      
       return exports.length === 1 ? exports[0] : exports;
     }
     
     // Export all data
     const allExports: SessionExport[] = [];
     
-    // Add exports from all stores
-    this.thoughtStore.getAll().forEach(thought => {
+    // Add exports from all types via unified store
+    this.store.getThoughts().forEach(thought => {
       allExports.push({
         ...baseExport,
         sessionType: 'sequential',
@@ -567,7 +562,7 @@ export class SessionState {
       });
     });
     
-    this.mentalModelStore.getAll().forEach(model => {
+    this.store.getMentalModels().forEach(model => {
       allExports.push({
         ...baseExport,
         sessionType: 'mental-model',
@@ -575,7 +570,30 @@ export class SessionState {
       });
     });
     
-    // Continue for all other stores...
+    this.store.getDebuggingSessions().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'debugging', data: item });
+    });
+    this.store.getCollaborativeSessions().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'collaborative', data: item });
+    });
+    this.store.getDecisions().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'decision', data: item });
+    });
+    this.store.getMetacognitiveSessions().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'metacognitive', data: item });
+    });
+    this.store.getScientificInquiries().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'scientific', data: item });
+    });
+    this.store.getCreativeSessions().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'creative', data: item });
+    });
+    this.store.getSystemsAnalyses().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'systems', data: item });
+    });
+    this.store.getVisualOperations().forEach(item => {
+      allExports.push({ ...baseExport, sessionType: 'visual', data: item });
+    });
     
     return allExports;
   }
@@ -643,17 +661,8 @@ export class SessionState {
       this.timeoutTimer = undefined;
     }
     
-    // Clear all stores
-    this.thoughtStore.clear();
-    this.mentalModelStore.clear();
-    this.debuggingStore.clear();
-    this.collaborativeStore.clear();
-    this.decisionStore.clear();
-    this.metacognitiveStore.clear();
-    this.scientificStore.clear();
-    this.creativeStore.clear();
-    this.systemsStore.clear();
-    this.visualStore.clear();
+    // Clear unified store
+    this.store.clear();
   }
   
   /**
