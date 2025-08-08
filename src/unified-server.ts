@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import { Server as McpServer } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express from 'express';
-import cors from 'cors';
 import { randomUUID } from 'node:crypto';
 import {
   CallToolRequestSchema,
@@ -135,8 +132,8 @@ export class ClearThoughtUnifiedServer {
         await this.startStdio();
         break;
       case 'http':
-        await this.startHttp();
-        break;
+        // For HTTP, return the MCP server and let the host environment provide the HTTP transport
+        return this.mcpServer as any;
       case 'smithery':
         return this.mcpServer as any;
     }
@@ -148,56 +145,8 @@ export class ClearThoughtUnifiedServer {
     console.error('Clear Thought MCP Server (stdio) started');
   }
   
-  private async startHttp(): Promise<void> {
-    const app = express();
-    app.use(cors({ origin: true, credentials: true }));
-    
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID()
-    });
-    
-    await this.mcpServer.connect(transport);
-    
-    // MCP endpoint
-    app.all('/mcp', async (req, res) => {
-      await transport.handleRequest(req, res);
-    });
-    
-    // Health check
-    app.get('/health', (req, res) => {
-      res.json({
-        status: 'ok',
-        service: 'clear-thought-unified',
-        transport: 'http',
-        tools: this.toolRegistry.getToolNames()
-      });
-    });
-    
-    // Info endpoint
-    app.get('/', (req, res) => {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      res.json({
-        service: 'Clear Thought Unified Server',
-        version: '1.0.0',
-        transport: 'http',
-        endpoints: {
-          mcp: `${baseUrl}/mcp`,
-          health: `${baseUrl}/health`
-        },
-        tools: {
-          count: this.toolRegistry.getAll().length,
-          names: this.toolRegistry.getToolNames()
-        }
-      });
-    });
-    
-    app.listen(this.options.port, () => {
-      console.log(`🚀 Clear Thought Unified Server running on port ${this.options.port}`);
-      console.log(`📡 MCP endpoint: http://localhost:${this.options.port}/mcp`);
-      console.log(`❤️ Health: http://localhost:${this.options.port}/health`);
-      console.log(`🛠️ Tools loaded: ${this.toolRegistry.getAll().length}`);
-    });
-  }
+  // HTTP startup is intentionally omitted. When using HTTP, an external host or
+  // platform (e.g., Smithery) should own the HTTP listener and use the MCP transport.
   
   // For Smithery export
   getMcpServer(): McpServer {
