@@ -6,20 +6,21 @@
  */
 
 import { ClearThoughtUnifiedServer } from './unified-server.js';
+import type { UnifiedServerOptions } from './unified-server.js';
+
+// Options for creating the server (typed)
+export interface CreateOptions extends UnifiedServerOptions {
+  returnMcpServer?: boolean;
+}
 
 // Export factory function for programmatic use
-export default function createClearThoughtServer(config?: any) {
-  const server = new ClearThoughtUnifiedServer({
-    transport: config?.transport,
-    port: config?.port,
-    config
-  });
+export default function createClearThoughtServer(options?: CreateOptions) {
+  const server = new ClearThoughtUnifiedServer(options ?? {});
   
   // For host-managed HTTP environments, return the MCP server instance
-  if (config?.returnMcpServer) {
+  if (options?.returnMcpServer) {
     return server.getMcpServer();
   }
-  
   return server;
 }
 
