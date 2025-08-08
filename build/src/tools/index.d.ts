@@ -1,9 +1,26 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { SessionState } from '../state/SessionState.js';
 /**
- * Registers all Clear Thought tools with the provided MCP server instance
- * @param server - The MCP server instance
- * @param sessionState - The session state manager
+ * Tool Index - All tools self-register on import
+ * This file serves as the central import point for tool registration
  */
-export declare function registerTools(server: McpServer, sessionState: SessionState): void;
+export * from './sequential-thinking.js';
+export * from './mental-model.js';
+export * from './debugging-approach.js';
+export * from './collaborative-reasoning.js';
+export * from './decision-framework.js';
+export * from './metacognitive.js';
+export * from './scientific-method.js';
+export * from './structured-argumentation.js';
+export * from './visual-reasoning.js';
+export * from './creative-thinking.js';
+export * from './systems-thinking.js';
+export * from './socratic-method.js';
+export * from './session-management.js';
+export * from './unified-reasoning.js';
+export { ToolRegistry } from '../registry/tool-registry.js';
+export declare function loadAllTools(): Promise<void>;
+export declare function getToolStats(): {
+    total: any;
+    byCategory: any;
+    names: any;
+};
 //# sourceMappingURL=index.d.ts.map

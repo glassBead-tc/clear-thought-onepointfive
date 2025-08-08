@@ -1,17 +1,10 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-export declare class ClearThoughtMCPServer {
-    private app;
-    private mcpServer;
-    private mcpTransport;
-    constructor();
-    private setupMCPHandlers;
-    private setupMCPTransport;
-    private setupMiddleware;
-    private setupRoutes;
-    start(port?: number): Promise<void>;
-}
-export default function (): Server<{
+/**
+ * Smithery Entry Point
+ *
+ * Uses the unified server in HTTP mode for Smithery deployment
+ */
+export default function createSmitheryServer(): import("@modelcontextprotocol/sdk/server/index.js").Server<{
     method: string;
     params?: {
         [x: string]: unknown;

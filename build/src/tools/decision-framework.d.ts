@@ -1,4 +1,51 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
 import type { SessionState } from '../state/SessionState.js';
-export declare function registerDecisionFramework(server: McpServer, sessionState: SessionState): void;
+declare const DecisionFrameworkSchema: z.ZodObject<{
+    decisionStatement: z.ZodString;
+    options: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        description: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        description: string;
+    }, {
+        name: string;
+        description: string;
+    }>, "many">;
+    analysisType: z.ZodString;
+    stage: z.ZodString;
+    decisionId: z.ZodString;
+    iteration: z.ZodNumber;
+    nextStageNeeded: z.ZodBoolean;
+}, "strip", z.ZodTypeAny, {
+    options: {
+        name: string;
+        description: string;
+    }[];
+    iteration: number;
+    analysisType: string;
+    stage: string;
+    decisionStatement: string;
+    decisionId: string;
+    nextStageNeeded: boolean;
+}, {
+    options: {
+        name: string;
+        description: string;
+    }[];
+    iteration: number;
+    analysisType: string;
+    stage: string;
+    decisionStatement: string;
+    decisionId: string;
+    nextStageNeeded: boolean;
+}>;
+export type DecisionFrameworkArgs = z.infer<typeof DecisionFrameworkSchema>;
+declare function handleDecisionFramework(args: DecisionFrameworkArgs, session: SessionState): Promise<{
+    content: {
+        type: "text";
+        text: string;
+    }[];
+}>;
+export { handleDecisionFramework };
 //# sourceMappingURL=decision-framework.d.ts.map

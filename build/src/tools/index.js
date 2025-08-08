@@ -1,36 +1,42 @@
-import { registerSequentialThinking } from './sequential-thinking.js';
-import { registerMentalModel } from './mental-model.js';
-import { registerDebuggingApproach } from './debugging-approach.js';
-import { registerCollaborativeReasoning } from './collaborative-reasoning.js';
-import { registerDecisionFramework } from './decision-framework.js';
-import { registerMetacognitiveMonitoring } from './metacognitive.js';
-import { registerSocraticMethod } from './socratic-method.js';
-import { registerCreativeThinking } from './creative-thinking.js';
-import { registerSystemsThinking } from './systems-thinking.js';
-import { registerScientificMethod } from './scientific-method.js';
-import { registerStructuredArgumentation } from './structured-argumentation.js';
-import { registerVisualReasoning } from './visual-reasoning.js';
-import { registerSessionManagement } from './session-management.js';
 /**
- * Registers all Clear Thought tools with the provided MCP server instance
- * @param server - The MCP server instance
- * @param sessionState - The session state manager
+ * Tool Index - All tools self-register on import
+ * This file serves as the central import point for tool registration
  */
-export function registerTools(server, sessionState) {
-    // Register all thinking and reasoning tools
-    registerSequentialThinking(server, sessionState);
-    registerMentalModel(server, sessionState);
-    registerDebuggingApproach(server, sessionState);
-    registerCollaborativeReasoning(server, sessionState);
-    registerDecisionFramework(server, sessionState);
-    registerMetacognitiveMonitoring(server, sessionState);
-    registerSocraticMethod(server, sessionState);
-    registerCreativeThinking(server, sessionState);
-    registerSystemsThinking(server, sessionState);
-    registerScientificMethod(server, sessionState);
-    registerStructuredArgumentation(server, sessionState);
-    registerVisualReasoning(server, sessionState);
-    // Register session management tools
-    registerSessionManagement(server, sessionState);
+// Import all tools - they self-register with ToolRegistry on import
+export * from './sequential-thinking.js';
+export * from './mental-model.js';
+export * from './debugging-approach.js';
+export * from './collaborative-reasoning.js';
+export * from './decision-framework.js';
+export * from './metacognitive.js';
+export * from './scientific-method.js';
+export * from './structured-argumentation.js';
+export * from './visual-reasoning.js';
+export * from './creative-thinking.js';
+export * from './systems-thinking.js';
+export * from './socratic-method.js';
+export * from './session-management.js';
+export * from './unified-reasoning.js';
+// Export registry for programmatic access
+export { ToolRegistry } from '../registry/tool-registry.js';
+// Dynamic tool loading function
+export async function loadAllTools() {
+    // Tools are loaded via imports above
+    // In future, could use dynamic imports for lazy loading
+}
+// Get tool statistics
+export function getToolStats() {
+    const { ToolRegistry } = require('../registry/tool-registry.js');
+    const registry = ToolRegistry.getInstance();
+    const tools = registry.getAll();
+    return {
+        total: tools.length,
+        byCategory: tools.reduce((acc, tool) => {
+            const category = tool.category || 'uncategorized';
+            acc[category] = (acc[category] || 0) + 1;
+            return acc;
+        }, {}),
+        names: registry.getToolNames()
+    };
 }
 //# sourceMappingURL=index.js.map

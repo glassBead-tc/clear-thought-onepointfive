@@ -609,15 +609,15 @@ export interface VisualData {
  */
 export interface SessionExport {
     /** Export format version */
-    version: string;
+    version?: string;
     /** Export timestamp */
     timestamp: string;
     /** Session ID */
     sessionId: string;
     /** Type of thinking session */
-    sessionType: 'sequential' | 'mental-model' | 'debugging' | 'collaborative' | 'decision' | 'metacognitive' | 'scientific' | 'socratic' | 'creative' | 'systems' | 'visual';
+    sessionType: 'sequential' | 'mental-model' | 'debugging' | 'collaborative' | 'decision' | 'metacognitive' | 'scientific' | 'socratic' | 'creative' | 'systems' | 'visual' | string;
     /** Session data (varies by type) */
-    data: ThoughtData | MentalModelData | DebuggingSession | CollaborativeSession | DecisionData | MetacognitiveData | ScientificInquiryData | SocraticData | CreativeData | SystemsData | VisualData;
+    data: ThoughtData | MentalModelData | DebuggingSession | CollaborativeSession | DecisionData | MetacognitiveData | ScientificInquiryData | SocraticData | CreativeData | SystemsData | VisualData | any[];
     /** Session metadata */
     metadata?: {
         /** User who created the session */

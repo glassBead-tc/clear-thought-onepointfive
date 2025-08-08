@@ -1,45 +1,50 @@
 import { z } from 'zod';
-export function registerStructuredArgumentation(server, sessionState) {
-    server.tool('structuredargumentation', 'Construct and analyze structured arguments', {
-        claim: z.string(),
-        premises: z.array(z.string()),
-        conclusion: z.string(),
-        argumentType: z.string(),
-        confidence: z.number(),
-        nextArgumentNeeded: z.boolean()
-    }, async (args) => {
-        const argumentData = {
-            claim: args.claim,
-            premises: args.premises,
-            conclusion: args.conclusion,
-            argumentType: args.argumentType,
-            confidence: args.confidence,
-            nextArgumentNeeded: args.nextArgumentNeeded,
-            sessionId: sessionState.sessionId,
-            iteration: 1
-        };
-        // Store using the addArgumentation method
-        sessionState.addArgumentation(argumentData);
-        // Get session context
-        const stats = sessionState.getStats();
-        return {
-            content: [{
-                    type: 'text',
-                    text: JSON.stringify({
-                        claim: args.claim,
-                        premisesCount: args.premises.length,
-                        argumentType: args.argumentType,
-                        confidence: args.confidence,
-                        nextArgumentNeeded: args.nextArgumentNeeded,
-                        status: 'success',
-                        sessionContext: {
-                            sessionId: sessionState.sessionId,
-                            totalOperations: stats.totalOperations,
-                            creativeStoreStats: stats.stores.creative
-                        }
-                    }, null, 2)
-                }]
-        };
-    });
+import { ToolRegistry } from '../registry/tool-registry.js';
+const StructuredArgumentationSchema = z.object({
+    claim: z.string().describe('Main claim or thesis'),
+    premises: z.array(z.object({
+        statement: z.string(),
+        support: z.string(),
+        strength: z.enum(['strong', 'moderate', 'weak'])
+    })).describe('Supporting premises'),
+    counterarguments: z.array(z.object({
+        argument: z.string(),
+        rebuttal: z.string()
+    })).optional().describe('Counterarguments and rebuttals'),
+    conclusion: z.string().describe('Final conclusion'),
+    validity: z.enum(['valid', 'invalid', 'uncertain']).describe('Argument validity')
+});
+async function handleStructuredArgumentation(args, session) {
+    const argumentData = {
+        claim: args.claim,
+        premises: args.premises,
+        counterarguments: args.counterarguments || [],
+        conclusion: args.conclusion,
+        validity: args.validity,
+        timestamp: new Date().toISOString()
+    };
+    const stats = session.getStats();
+    return {
+        content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    ...argumentData,
+                    status: 'success',
+                    sessionContext: {
+                        sessionId: session.sessionId,
+                        stats
+                    }
+                })
+            }]
+    };
 }
+// Self-register
+ToolRegistry.getInstance().register({
+    name: 'structuredargumentation',
+    description: 'Build and analyze structured logical arguments',
+    schema: StructuredArgumentationSchema,
+    handler: handleStructuredArgumentation,
+    category: 'reasoning'
+});
+export { handleStructuredArgumentation };
 //# sourceMappingURL=structured-argumentation.js.map

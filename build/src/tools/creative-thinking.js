@@ -1,53 +1,50 @@
 import { z } from 'zod';
-export function registerCreativeThinking(server, sessionState) {
-    server.tool('creativethinking', 'Engage in creative and lateral thinking approaches', {
-        prompt: z.string().describe('Creative prompt or challenge'),
-        ideas: z.array(z.string()).describe('Ideas generated'),
-        techniques: z.array(z.string()).describe('Techniques used'),
-        connections: z.array(z.string()).describe('Connections made'),
-        insights: z.array(z.string()).describe('Novel insights'),
-        sessionId: z.string().describe('Session identifier'),
-        iteration: z.number().describe('Current iteration'),
-        nextIdeaNeeded: z.boolean().describe('Whether more creativity is needed')
-    }, async (args) => {
-        const creativeData = {
-            prompt: args.prompt,
-            ideas: args.ideas,
-            techniques: args.techniques,
-            connections: args.connections,
-            insights: args.insights,
-            sessionId: args.sessionId,
-            iteration: args.iteration,
-            nextIdeaNeeded: args.nextIdeaNeeded
-        };
-        sessionState.addCreativeSession(creativeData);
-        // Get session context
-        const stats = sessionState.getStats();
-        const creativeSessions = sessionState.getCreativeSessions();
-        const recentSessions = creativeSessions.slice(-3);
-        return {
-            content: [{
-                    type: 'text',
-                    text: JSON.stringify({
-                        prompt: args.prompt,
-                        ideasGenerated: args.ideas.length,
-                        techniquesUsed: args.techniques,
-                        connectionsFound: args.connections.length,
-                        insights: args.insights,
-                        nextIdeaNeeded: args.nextIdeaNeeded,
-                        status: 'success',
-                        sessionContext: {
-                            sessionId: sessionState.sessionId,
-                            totalCreativeSessions: creativeSessions.length,
-                            recentPrompts: recentSessions.map(s => ({
-                                prompt: s.prompt,
-                                ideasCount: s.ideas.length,
-                                iteration: s.iteration
-                            }))
-                        }
-                    }, null, 2)
-                }]
-        };
-    });
+import { ToolRegistry } from '../registry/tool-registry.js';
+const CreativeThinkingSchema = z.object({
+    technique: z.enum([
+        'brainstorming',
+        'mind_mapping',
+        'scamper',
+        'six_thinking_hats',
+        'lateral_thinking',
+        'random_stimulation'
+    ]).describe('Creative thinking technique'),
+    problem: z.string().describe('Problem or challenge to address'),
+    ideas: z.array(z.string()).describe('Generated ideas'),
+    connections: z.array(z.string()).optional().describe('Connections between ideas'),
+    evaluation: z.string().optional().describe('Evaluation of ideas')
+});
+async function handleCreativeThinking(args, session) {
+    const creativeData = {
+        technique: args.technique,
+        problem: args.problem,
+        ideas: args.ideas,
+        connections: args.connections || [],
+        evaluation: args.evaluation,
+        timestamp: new Date().toISOString()
+    };
+    const stats = session.getStats();
+    return {
+        content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    ...creativeData,
+                    status: 'success',
+                    sessionContext: {
+                        sessionId: session.sessionId,
+                        stats
+                    }
+                })
+            }]
+    };
 }
+// Self-register
+ToolRegistry.getInstance().register({
+    name: 'creativethinking',
+    description: 'Apply creative thinking techniques for innovative problem-solving',
+    schema: CreativeThinkingSchema,
+    handler: handleCreativeThinking,
+    category: 'creative'
+});
+export { handleCreativeThinking };
 //# sourceMappingURL=creative-thinking.js.map

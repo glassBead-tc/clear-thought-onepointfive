@@ -1,38 +1,40 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { SessionState } from './state/SessionState.js';
-import { ServerConfigSchema, type ServerConfig } from './config.js';
-import { registerTools } from './tools/index.js';
-
-// Export the config schema for Smithery
-export { ServerConfigSchema as configSchema } from './config.js';
-
+#!/usr/bin/env node
 /**
- * Creates a Clear Thought MCP server instance for a specific session
- * @param sessionId - Unique identifier for this session
- * @param config - Server configuration
- * @returns Server instance configured for this session
+ * Clear Thought MCP Server - Main Entry Point
+ * 
+ * Unified server supporting stdio, HTTP, and Smithery transports
  */
-export default function createClearThoughtServer({
-  sessionId,
-  config
-}: {
-  sessionId: string;
-  config: z.infer<typeof ServerConfigSchema>
-}): Server {
-  // Create a new MCP server instance for each session
-  const mcpServer = new McpServer({
-    name: 'clear-thought',
-    version: '0.0.5'
+
+import { ClearThoughtUnifiedServer } from './unified-server.js';
+
+// Export factory function for programmatic use
+export default function createClearThoughtServer(config?: any) {
+  const server = new ClearThoughtUnifiedServer({
+    transport: config?.transport,
+    port: config?.port,
+    config
   });
-
-  // Initialize session state
-  const sessionState = new SessionState(sessionId, config);
-
-  // Register all tools for this session
-  registerTools(mcpServer, sessionState);
   
-  // Return the underlying Server instance for Smithery SDK
-  return mcpServer.server;
+  // For MCP/Smithery compatibility, return the MCP server instance
+  if (config?.transport === 'smithery' || config?.returnMcpServer) {
+    return server.getMcpServer();
+  }
+  
+  return server;
 }
+
+// Auto-start if executed directly
+if (process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js')) {
+  const server = new ClearThoughtUnifiedServer();
+  server.start().catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}
+
+// Export types for external use
+export type { UnifiedServerOptions } from './unified-server.js';
+export { ClearThoughtUnifiedServer } from './unified-server.js';
+export { ToolRegistry } from './registry/tool-registry.js';
+export { SessionState } from './state/SessionState.js';
+export { SessionManager } from './state/SessionManager.js';
