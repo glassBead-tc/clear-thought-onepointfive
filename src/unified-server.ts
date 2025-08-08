@@ -2,12 +2,7 @@
 import { Server as McpServer } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { randomUUID } from 'node:crypto';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { ToolRegistry } from './registry/tool-registry.js';
 import { SessionManager } from './state/SessionManager.js';
 import type { ServerConfig } from './config.js';
@@ -64,8 +59,7 @@ export class ClearThoughtUnifiedServer {
       },
       {
         capabilities: {
-          tools: {},
-          resources: {}
+          tools: {}
         }
       }
     );
@@ -115,14 +109,7 @@ export class ClearThoughtUnifiedServer {
       return { tools: this.toolRegistry.toMCPTools() };
     });
     
-    // Resources (placeholder)
-    this.mcpServer.setRequestHandler(ListResourcesRequestSchema, async () => ({
-      resources: []
-    }));
-    
-    this.mcpServer.setRequestHandler(ReadResourceRequestSchema, async () => ({
-      contents: []
-    }));
+    // No resources served
   }
   
   async start(): Promise<void> {
