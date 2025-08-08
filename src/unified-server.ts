@@ -10,7 +10,6 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { ToolRegistry } from './registry/tool-registry.js';
 import { SessionManager } from './state/SessionManager.js';
-import { SessionState } from './state/SessionState.js';
 import type { ServerConfig } from './config.js';
 
 // Lazy tool module map (modules self-register on import)
