@@ -76,9 +76,7 @@ export class ClearThoughtUnifiedServer {
     return 'stdio';
   }
   
-  private async loadTools(): Promise<void> {
-    // Lazy loading: defer tool imports until list/execute time
-  }
+  // No eager tool loading; tools are lazily imported at CallTool/ListTools time
   
   private setupHandlers(): void {
     // Tool execution handler - unified for all tools (lazy-load per call)
