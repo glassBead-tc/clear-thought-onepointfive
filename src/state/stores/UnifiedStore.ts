@@ -5,7 +5,6 @@
  * with efficient indexing and querying capabilities.
  */
 
-import { IdGenerator } from '../utils/IdGenerator.js';
 import {
   ThoughtData,
   MentalModelData,
@@ -502,15 +501,42 @@ export class UnifiedStore {
    * Generate unique ID for data item
    */
   private generateId(data: UnifiedDataType): string {
-    // Use IdGenerator for existing object IDs or generate new
-    const existingId = IdGenerator.fromObject(data);
-    if (existingId !== IdGenerator.generate()) {
-      return existingId;
-    }
-    
+    // Prefer existing identifier if present
+    const existingId = this.extractExistingId(data);
+    if (existingId) return existingId;
+
     // Generate new ID with type prefix
     const typePrefix = this.getDataType(data);
-    return IdGenerator.generate(typePrefix);
+    return this.generate(typePrefix);
+  }
+
+  // ---- Local ID helpers (inlined to avoid separate utility file) ----
+
+  private extractExistingId(obj: any): string | null {
+    const idProps = ['id', 'sessionId', 'decisionId', 'inquiryId', 'monitoringId', 'argumentId', 'diagramId'];
+    for (const prop of idProps) {
+      if (prop in obj && typeof obj[prop] === 'string' && obj[prop]) {
+        return obj[prop] as string;
+      }
+    }
+    return null;
+  }
+
+  private generate(prefix?: string, includeTimestamp: boolean = true, randomLength: number = 9, separator: string = '-'): string {
+    const parts: string[] = [];
+    if (prefix) parts.push(prefix);
+    if (includeTimestamp) parts.push(Date.now().toString());
+    if (randomLength > 0) parts.push(this.generateRandomString(randomLength));
+    return parts.join(separator);
+  }
+
+  private generateRandomString(length: number): string {
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   }
   
   /**
