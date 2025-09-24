@@ -1,76 +1,65 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ToolRegistry } from '../registry/tool-registry.js';
 import type { SessionState } from '../state/SessionState.js';
-import type { SystemsData } from '../types/index.js';
 
-export function registerSystemsThinking(server: McpServer, sessionState: SessionState) {
-  server.tool(
-    'systemsthinking',
-    'Analyze complex systems and their interactions',
-    {
-      system: z.string().describe('System being analyzed'),
-      components: z.array(z.string()).describe('Components identified'),
-      relationships: z.array(z.object({
-        from: z.string(),
-        to: z.string(),
-        type: z.string(),
-        strength: z.number().optional()
-      })).describe('Relationships between components'),
-      feedbackLoops: z.array(z.object({
-        components: z.array(z.string()),
-        type: z.enum(['positive', 'negative']),
-        description: z.string()
-      })).describe('Feedback loops identified'),
-      emergentProperties: z.array(z.string()).describe('Emergent properties'),
-      leveragePoints: z.array(z.string()).describe('Leverage points'),
-      sessionId: z.string().describe('Session ID'),
-      iteration: z.number().describe('Current iteration'),
-      nextAnalysisNeeded: z.boolean().describe('Whether more analysis is needed')
-    },
-    async (args) => {
-      const systemsData: SystemsData = {
-        system: args.system,
-        components: args.components,
-        relationships: args.relationships,
-        feedbackLoops: args.feedbackLoops,
-        emergentProperties: args.emergentProperties,
-        leveragePoints: args.leveragePoints,
-        sessionId: args.sessionId,
-        iteration: args.iteration,
-        nextAnalysisNeeded: args.nextAnalysisNeeded
-      };
-      
-      sessionState.addSystemsAnalysis(systemsData);
-      
-      // Get session context
-      const stats = sessionState.getStats();
-      const systemsAnalyses = sessionState.getSystemsAnalyses();
-      const recentAnalyses = systemsAnalyses.slice(-3);
-      
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            system: args.system,
-            componentsCount: args.components.length,
-            relationshipsCount: args.relationships.length,
-            feedbackLoops: args.feedbackLoops,
-            emergentProperties: args.emergentProperties,
-            leveragePoints: args.leveragePoints,
-            nextAnalysisNeeded: args.nextAnalysisNeeded,
-            status: 'success',
-            sessionContext: {
-              sessionId: sessionState.sessionId,
-              totalSystemsAnalyses: systemsAnalyses.length,
-              recentAnalyses: recentAnalyses.map(a => ({
-                system: a.system,
-                componentsCount: a.components.length,
-                iteration: a.iteration
-              }))
-            }
-          }, null, 2)
-        }]
-      };
-    }
-  );
+const SystemsThinkingSchema = z.object({
+  systemName: z.string().describe('Name of the system being analyzed'),
+  components: z.array(z.object({
+    name: z.string(),
+    function: z.string(),
+    interactions: z.array(z.string())
+  })).describe('System components'),
+  boundaries: z.string().describe('System boundaries'),
+  inputs: z.array(z.string()).describe('System inputs'),
+  outputs: z.array(z.string()).describe('System outputs'),
+  feedbackLoops: z.array(z.object({
+    type: z.enum(['positive', 'negative']),
+    description: z.string()
+  })).optional().describe('Feedback loops'),
+  emergentProperties: z.array(z.string()).optional().describe('Emergent properties')
+});
+
+export type SystemsThinkingArgs = z.infer<typeof SystemsThinkingSchema>;
+
+async function handleSystemsThinking(
+  args: SystemsThinkingArgs,
+  session: SessionState
+) {
+  const systemsData = {
+    systemName: args.systemName,
+    components: args.components,
+    boundaries: args.boundaries,
+    inputs: args.inputs,
+    outputs: args.outputs,
+    feedbackLoops: args.feedbackLoops || [],
+    emergentProperties: args.emergentProperties || [],
+    timestamp: new Date().toISOString()
+  };
+  
+  const stats = session.getStats();
+  
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify({
+        ...systemsData,
+        status: 'success',
+        sessionContext: {
+          sessionId: session.sessionId,
+          stats
+        }
+      })
+    }]
+  };
 }
+
+// Self-register
+// ToolRegistry.getInstance().register({
+//   name: 'systemsthinking',
+//   description: 'Analyze complex systems and their interactions',
+//   schema: SystemsThinkingSchema,
+//   handler: handleSystemsThinking,
+//   category: 'reasoning'
+// });
+
+export { handleSystemsThinking };

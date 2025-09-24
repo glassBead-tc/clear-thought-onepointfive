@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Model Context Protocol (MCP) server that provides systematic thinking, mental models, and debugging approaches for enhanced problem-solving capabilities. It enables Claude to use various cognitive tools including sequential thinking, mental models, and structured debugging approaches.
+This is a Model Context Protocol (MCP) server that provides systematic thinking, mental models, and debugging approaches for enhanced problem-solving capabilities. It enables Claude to use various cognitive tools including sequential thinking, mental models, structured debugging approaches, and advanced reasoning patterns.
 
 ## Commands
 
@@ -14,88 +14,120 @@ This is a Model Context Protocol (MCP) server that provides systematic thinking,
 # Install dependencies
 npm install
 
-# Build the project
+# Build the project (TypeScript + tsc-alias)
 npm run build
 
-# Start the server
+# Start the server (MCP stdio mode)
 npm start
 
-# Watch mode (for development)
-npm run dev 
+# Development mode with hot reload
+npm run dev
 
+# Development mode for HTTP server
+npm run dev:http
+
+# Type checking
+npm run typecheck
+
+# Run tests (when available)
+npm test
+npm run test:coverage
+
+# Clean build artifacts
+npm run clean
+
+# Deploy to Smithery
+npm run deploy
+
+# Run MCP inspector for debugging
+npm run inspector
+```
+
+### Docker Operations
+
+```bash
 # Build Docker image
-npm run docker
+npm run docker:build
 # or directly
 docker build -t waldzellai/clear-thought .
 
 # Run Docker container
-docker run -it waldzellai/clear-thought
-
-# Deploy to Smithery
-npm run deploy
-```
-
-### Cleaning
-
-```bash
-# Clean the build directory
-npm run clean
+npm run docker:run
+# or directly
+docker run -p 3000:3000 waldzellai/clear-thought
 ```
 
 ## Code Architecture
 
-This project is a TypeScript-based MCP server that follows the Model Context Protocol defined by Anthropic. It consists of several key components:
+### Core Module Structure
 
-1. **Server Class Definitions** - Implementation of various thinking tools:
-   - `SequentialThinkingServer` - Supports multi-step thinking with revision capabilities
-   - `MentalModelServer` - Provides structured mental models like First Principles, Pareto, etc.
-   - `DebuggingApproachServer` - Implements debugging methodologies like Binary Search
+The codebase follows a modular architecture with clear separation of concerns:
 
-2. **Data Interfaces** - Type definitions for the various thinking tools:
-   - `ThoughtData` - For sequential thinking steps
-   - `MentalModelData` - For mental model applications
-   - `DebuggingApproachData` - For debugging approaches
+1. **Entry Points**
+   - `src/index.ts` - Main MCP server factory function (stdio communication)
+   - `src/smithery-entry.ts` - HTTP server entry for Smithery deployment
+   - `src/server.ts` - Smithery SDK server implementation
 
-3. **Tool Definitions** - Registration of tools with the MCP framework:
-   - Each tool has a name, description, and input schema
-   - Consistent schemas for use by language models
+2. **Tool Registration System** (`src/tools/`)
+   - Each tool is a separate module exporting a registration function
+  - Tools are lazily registered on-demand by `src/unified-server.ts` using dynamic imports; `src/tools/index.ts` no longer performs eager registration
+   - All tools share a common `SessionState` instance for state management
+   - Tool modules: sequential-thinking, mental-model, debugging-approach, collaborative-reasoning, decision-framework, metacognitive, socratic-method, creative-thinking, systems-thinking, scientific-method, structured-argumentation, visual-reasoning, session-management
 
-4. **Request Handlers** - Logic to process tool requests:
-   - Validates input data against schemas
-   - Calls appropriate processing functions
-   - Returns formatted JSON responses
+3. **State Management** (`src/state/`)
+   - `SessionState.ts` - Central session state manager coordinating all stores
+   - `stores/` - Individual stores for each thinking pattern (ThoughtStore, MentalModelStore, etc.)
+   - `stores/UnifiedStore.ts` - Unified store consolidating all data types through a single interface
+   - Session-scoped state ensures isolation between concurrent users
 
-5. **Server Transport** - Uses stdio for communication with the MCP client
+4. **Type System** (`src/types/`)
+   - `index.ts` - Core data interfaces for all thinking tools
+   - `reasoning-patterns/` - Advanced reasoning pattern types (Tree of Thought, Graph of Thought, Beam Search, MCTS)
+   - `reasoning-patterns/base.ts` - Base interfaces that all reasoning patterns extend (BaseReasoningNode, BaseReasoningSession)
 
-The server is implemented as a single-file application (`index.ts`) that gets compiled to JavaScript using TypeScript.
+5. **Configuration**
+   - `src/config.ts` - Server configuration schema using Zod
+   - Configuration is passed through the server factory function
+   - Supports both environment variables and direct configuration
 
-## File Structure
+### Key Architectural Patterns
 
-- `index.ts` - Main server implementation
-- `dist/` - Compiled JavaScript code
-- `Dockerfile` - Container definition
-- `smithery.yaml` - Smithery deployment configuration
-- `package.json` - Node.js package definition
+1. **Tool Handler Pattern**
+   Each tool follows a consistent pattern:
+   - Receives parsed input validated against Zod schema
+   - Accesses shared SessionState for data persistence
+   - Returns structured JSON responses with session context
+   - Handles errors gracefully with appropriate error codes
 
-## Key Implementation Notes
+2. **Session State Architecture**
+   - Each session has isolated state via SessionState instance
+   - Stores are lazy-loaded when first accessed
+   - Data can be exported/imported for session persistence
+   - Statistics tracking for all operations
 
-1. **Tool Processing Flow**:
-   - Data validation through type checking
-   - Server class instance processes the data
-   - Results are formatted and returned as JSON
+3. **Type Safety**
+   - All tool inputs validated with Zod schemas
+   - TypeScript strict mode enabled
+   - Interfaces extend base types for consistency (e.g., all session types extend BaseReasoningSession)
 
-2. **Thinking Tools**:
-   - Sequential Thinking: Maintains thought history with support for branching and revision
-   - Mental Models: Provides structure for applying specific reasoning frameworks
-   - Debugging Approaches: Implements technical problem-solving methodologies
-   - Additional cognitive tools: Collaborative reasoning, decision frameworks, metacognitive monitoring, etc.
+4. **Build System**
+   - TypeScript compilation to ES2022
+   - Module resolution: NodeNext
+   - Path aliases resolved with tsc-alias
+   - Separate build outputs: `build/` for development, `dist/` for distribution
 
-3. **Configuration**:
-   - The server uses TypeScript with ES2020 target
-   - Uses stdio for communication with MCP clients
-   - No configuration required to run
+### Deployment Modes
 
-4. **Deployment**:
-   - Can be deployed via Smithery
-   - Available as a Docker container
-   - Can be installed via npm
+1. **MCP Server (stdio)** - Default mode for Claude Desktop integration
+2. **HTTP Server** - For Smithery deployment with Express endpoints
+3. **Docker Container** - Containerized deployment option
+4. **NPM Package** - Installable via npm as `@waldzellai/clear-thought-onepointfive`
+
+## Important Implementation Details
+
+- The server creates a new McpServer instance per session for isolation
+- All tools must be registered through the central `registerTools()` function
+- Session state is passed to all tool handlers for shared context
+- Tool responses include both the specific result and session statistics
+- The UnifiedStore provides a consolidated view of all thinking data types
+- Reasoning pattern interfaces must extend BaseReasoningSession for consistency

@@ -1,83 +1,59 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ToolRegistry } from '../registry/tool-registry.js';
 import type { SessionState } from '../state/SessionState.js';
-import type { CollaborativeSession, PersonaData, ContributionData } from '../types/index.js';
 
-const PersonaSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  expertise: z.array(z.string()),
-  background: z.string(),
-  perspective: z.string(),
-  biases: z.array(z.string()),
-  communication: z.object({
-    style: z.enum(['formal', 'casual', 'technical', 'creative']),
-    tone: z.enum(['analytical', 'supportive', 'challenging', 'neutral'])
-  })
+const CollaborativeReasoningSchema = z.object({
+  topic: z.string().describe('The topic being discussed'),
+  perspectives: z.array(z.object({
+    agent: z.string().describe('Name or role of the agent'),
+    viewpoint: z.string().describe('The agent\'s perspective'),
+    reasoning: z.string().describe('Reasoning behind the viewpoint')
+  })).describe('Different perspectives from multiple agents'),
+  synthesis: z.string().describe('Synthesis of all perspectives'),
+  consensus: z.string().optional().describe('Consensus reached, if any'),
+  // NEW: Optional sessionId for continuation
+  sessionId: z.string().optional().describe('Session ID for continuing existing collaborative session')
 });
 
-const ContributionSchema = z.object({
-  personaId: z.string(),
-  content: z.string(),
-  type: z.enum(['observation', 'question', 'insight', 'concern', 'suggestion', 'challenge', 'synthesis']),
-  confidence: z.number().min(0).max(1),
-  referenceIds: z.array(z.string()).optional()
-});
+export type CollaborativeReasoningArgs = z.infer<typeof CollaborativeReasoningSchema>;
 
-export function registerCollaborativeReasoning(server: McpServer, sessionState: SessionState) {
-  server.tool(
-    'collaborativereasoning',
-    'Facilitate collaborative reasoning with multiple perspectives and personas',
-    {
-      topic: z.string(),
-      personas: z.array(PersonaSchema),
-      contributions: z.array(ContributionSchema),
-      stage: z.enum(['problem-definition', 'ideation', 'critique', 'integration', 'decision', 'reflection']),
-      activePersonaId: z.string(),
-      sessionId: z.string(),
-      iteration: z.number(),
-      nextContributionNeeded: z.boolean()
-    },
-    async (args) => {
-      const collaborativeData: CollaborativeSession = {
-        topic: args.topic,
-        personas: args.personas,
-        contributions: args.contributions,
-        stage: args.stage,
-        activePersonaId: args.activePersonaId,
-        sessionId: args.sessionId,
-        iteration: args.iteration,
-        nextContributionNeeded: args.nextContributionNeeded
-      };
-      
-      sessionState.addCollaborativeSession(collaborativeData);
-      
-      // Get session context
-      const stats = sessionState.getStats();
-      const recentCollaborative = sessionState.getCollaborativeSessions().slice(-2);
-      
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            topic: args.topic,
-            stage: args.stage,
-            activePersonaId: args.activePersonaId,
-            contributionsCount: args.contributions.length,
-            nextContributionNeeded: args.nextContributionNeeded,
-            status: 'success',
-            sessionContext: {
-              sessionId: sessionState.sessionId,
-              totalCollaborativeSessions: stats.stores.collaborative.count || 0,
-              recentSessions: recentCollaborative.map((c: CollaborativeSession) => ({
-                topic: c.topic,
-                stage: c.stage,
-                contributionsCount: c.contributions.length
-              }))
-            }
-          }, null, 2)
-        }]
-      };
-    }
-  );
+async function handleCollaborativeReasoning(
+  args: CollaborativeReasoningArgs,
+  session: SessionState
+) {
+  const collaborativeData = {
+    topic: args.topic,
+    perspectives: args.perspectives,
+    synthesis: args.synthesis,
+    consensus: args.consensus,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Store in unified store or session
+  const stats = session.getStats();
+  
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify({
+        ...collaborativeData,
+        status: 'success',
+        sessionContext: {
+          sessionId: session.sessionId,
+          stats
+        }
+      })
+    }]
+  };
 }
+
+// Self-register
+// ToolRegistry.getInstance().register({
+//   name: 'collaborativereasoning',
+//   description: 'Enable multi-agent collaborative reasoning and perspective synthesis',
+//   schema: CollaborativeReasoningSchema,
+//   handler: handleCollaborativeReasoning,
+//   category: 'collaborative'
+// });
+
+export { handleCollaborativeReasoning };

@@ -1,64 +1,61 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ToolRegistry } from '../registry/tool-registry.js';
 import type { SessionState } from '../state/SessionState.js';
-import type { CreativeData } from '../types/index.js';
 
-export function registerCreativeThinking(server: McpServer, sessionState: SessionState) {
-  server.tool(
-    'creativethinking',
-    'Engage in creative and lateral thinking approaches',
-    {
-      prompt: z.string().describe('Creative prompt or challenge'),
-      ideas: z.array(z.string()).describe('Ideas generated'),
-      techniques: z.array(z.string()).describe('Techniques used'),
-      connections: z.array(z.string()).describe('Connections made'),
-      insights: z.array(z.string()).describe('Novel insights'),
-      sessionId: z.string().describe('Session identifier'),
-      iteration: z.number().describe('Current iteration'),
-      nextIdeaNeeded: z.boolean().describe('Whether more creativity is needed')
-    },
-    async (args) => {
-      const creativeData: CreativeData = {
-        prompt: args.prompt,
-        ideas: args.ideas,
-        techniques: args.techniques,
-        connections: args.connections,
-        insights: args.insights,
-        sessionId: args.sessionId,
-        iteration: args.iteration,
-        nextIdeaNeeded: args.nextIdeaNeeded
-      };
-      
-      sessionState.addCreativeSession(creativeData);
-      
-      // Get session context
-      const stats = sessionState.getStats();
-      const creativeSessions = sessionState.getCreativeSessions();
-      const recentSessions = creativeSessions.slice(-3);
-      
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            prompt: args.prompt,
-            ideasGenerated: args.ideas.length,
-            techniquesUsed: args.techniques,
-            connectionsFound: args.connections.length,
-            insights: args.insights,
-            nextIdeaNeeded: args.nextIdeaNeeded,
-            status: 'success',
-            sessionContext: {
-              sessionId: sessionState.sessionId,
-              totalCreativeSessions: creativeSessions.length,
-              recentPrompts: recentSessions.map(s => ({
-                prompt: s.prompt,
-                ideasCount: s.ideas.length,
-                iteration: s.iteration
-              }))
-            }
-          }, null, 2)
-        }]
-      };
-    }
-  );
+const CreativeThinkingSchema = z.object({
+  technique: z.enum([
+    'brainstorming',
+    'mind_mapping',
+    'scamper',
+    'six_thinking_hats',
+    'lateral_thinking',
+    'random_stimulation'
+  ]).describe('Creative thinking technique'),
+  problem: z.string().describe('Problem or challenge to address'),
+  ideas: z.array(z.string()).describe('Generated ideas'),
+  connections: z.array(z.string()).optional().describe('Connections between ideas'),
+  evaluation: z.string().optional().describe('Evaluation of ideas')
+});
+
+export type CreativeThinkingArgs = z.infer<typeof CreativeThinkingSchema>;
+
+async function handleCreativeThinking(
+  args: CreativeThinkingArgs,
+  session: SessionState
+) {
+  const creativeData = {
+    technique: args.technique,
+    problem: args.problem,
+    ideas: args.ideas,
+    connections: args.connections || [],
+    evaluation: args.evaluation,
+    timestamp: new Date().toISOString()
+  };
+  
+  const stats = session.getStats();
+  
+  return {
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify({
+        ...creativeData,
+        status: 'success',
+        sessionContext: {
+          sessionId: session.sessionId,
+          stats
+        }
+      })
+    }]
+  };
 }
+
+// Self-register
+// ToolRegistry.getInstance().register({
+//   name: 'creativethinking',
+//   description: 'Apply creative thinking techniques for innovative problem-solving',
+//   schema: CreativeThinkingSchema,
+//   handler: handleCreativeThinking,
+//   category: 'creative'
+// });
+
+export { handleCreativeThinking };
