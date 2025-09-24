@@ -6,7 +6,7 @@ import type { MentalModelData } from '../types/index.js';
 const MentalModelSchema = z.object({
   modelName: z.enum([
     'first_principles',
-    'opportunity_cost', 
+    'opportunity_cost',
     'error_propagation',
     'rubber_duck',
     'pareto_principle',
@@ -15,7 +15,9 @@ const MentalModelSchema = z.object({
   problem: z.string().describe('The problem being analyzed'),
   steps: z.array(z.string()).describe('Steps to apply the model'),
   reasoning: z.string().describe('Reasoning process'),
-  conclusion: z.string().describe('Conclusions drawn')
+  conclusion: z.string().describe('Conclusions drawn'),
+  // NEW: Optional sessionId for continuation
+  sessionId: z.string().optional().describe('Session ID for continuing existing mental model session')
 });
 
 export type MentalModelArgs = z.infer<typeof MentalModelSchema>;
@@ -56,13 +58,13 @@ async function handleMentalModel(
   };
 }
 
-// Self-register
-ToolRegistry.getInstance().register({
-  name: 'mentalmodel',
-  description: 'Apply mental models to analyze problems systematically',
-  schema: MentalModelSchema,
-  handler: handleMentalModel,
-  category: 'metacognitive'
-});
+// Self-register - DISABLED for ToolHost pattern
+// ToolRegistry.getInstance().register({
+//   name: 'mentalmodel',
+//   description: 'Apply mental models to analyze problems systematically',
+//   schema: MentalModelSchema,
+//   handler: handleMentalModel,
+//   category: 'metacognitive'
+// });
 
 export { handleMentalModel };

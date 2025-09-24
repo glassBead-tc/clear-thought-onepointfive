@@ -61,12 +61,12 @@ async function handleVisualReasoning(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'visualreasoning',
-  description: 'Use visual representations to analyze and understand complex information',
-  schema: VisualReasoningSchema,
-  handler: handleVisualReasoning,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'visualreasoning',
+//   description: 'Use visual representations to analyze and understand complex information',
+//   schema: VisualReasoningSchema,
+//   handler: handleVisualReasoning,
+//   category: 'reasoning'
+// });
 
 export { handleVisualReasoning };

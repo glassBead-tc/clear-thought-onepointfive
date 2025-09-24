@@ -53,12 +53,12 @@ async function handleScientificMethod(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'scientificmethod',
-  description: 'Apply scientific method for hypothesis testing and experimentation',
-  schema: ScientificMethodSchema,
-  handler: handleScientificMethod,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'scientificmethod',
+//   description: 'Apply scientific method for hypothesis testing and experimentation',
+//   schema: ScientificMethodSchema,
+//   handler: handleScientificMethod,
+//   category: 'reasoning'
+// });
 
 export { handleScientificMethod };

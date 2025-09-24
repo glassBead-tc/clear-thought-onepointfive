@@ -80,7 +80,6 @@
         "node": ">=18"
     },
     "main": "./dist/index.js",
-    "module": "./dist/src/smithery-entry.js",
     "exports": {
         ".": {
             "import": "./dist/index.js",

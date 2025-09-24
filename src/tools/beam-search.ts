@@ -101,13 +101,13 @@ async function handleBeam(args: BeamArgs, _session: SessionState) {
   };
 }
 
-ToolRegistry.getInstance().register({
-  name: 'beamsearch',
-  description: 'Beam Search reasoning tool (generate/evaluate/prune/iterate/export)',
-  schema: BeamSchema,
-  handler: handleBeam,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'beamsearch',
+//   description: 'Beam Search reasoning tool (generate/evaluate/prune/iterate/export)',
+//   schema: BeamSchema,
+//   handler: handleBeam,
+//   category: 'reasoning'
+// });
 
 export { handleBeam };
 

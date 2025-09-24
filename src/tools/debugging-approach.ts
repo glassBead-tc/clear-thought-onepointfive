@@ -56,12 +56,12 @@ async function handleDebuggingApproach(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'debuggingapproach',
-  description: 'Apply systematic debugging approaches to identify and resolve issues',
-  schema: DebuggingApproachSchema,
-  handler: handleDebuggingApproach,
-  category: 'metacognitive'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'debuggingapproach',
+//   description: 'Apply systematic debugging approaches to identify and resolve issues',
+//   schema: DebuggingApproachSchema,
+//   handler: handleDebuggingApproach,
+//   category: 'metacognitive'
+// });
 
 export { handleDebuggingApproach };

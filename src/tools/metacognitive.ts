@@ -44,12 +44,12 @@ async function handleMetacognitive(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'metacognitivemonitoring',
-  description: 'Monitor and adjust thinking processes in real-time',
-  schema: MetacognitiveSchema,
-  handler: handleMetacognitive,
-  category: 'metacognitive'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'metacognitivemonitoring',
+//   description: 'Monitor and adjust thinking processes in real-time',
+//   schema: MetacognitiveSchema,
+//   handler: handleMetacognitive,
+//   category: 'metacognitive'
+// });
 
 export { handleMetacognitive };

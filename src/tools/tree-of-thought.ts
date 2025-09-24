@@ -107,13 +107,13 @@ async function handleToT(args: ToTArgs, _session: SessionState) {
   };
 }
 
-ToolRegistry.getInstance().register({
-  name: 'treeofthought',
-  description: 'Tree-of-Thought reasoning tool (expand/evaluate/select/prune/iterate)',
-  schema: ToTSchema,
-  handler: handleToT,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'treeofthought',
+//   description: 'Tree-of-Thought reasoning tool (expand/evaluate/select/prune/iterate)',
+//   schema: ToTSchema,
+//   handler: handleToT,
+//   category: 'reasoning'
+// });
 
 export { handleToT };
 

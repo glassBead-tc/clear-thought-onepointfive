@@ -9,6 +9,13 @@ export interface ToolDefinition<T = any> {
   schema: z.ZodSchema<T>;
   handler: (args: T, session: SessionState) => Promise<CallToolResult>;
   category?: 'reasoning' | 'metacognitive' | 'collaborative' | 'creative' | 'session';
+  annotations?: {
+    audience?: string[];
+    priority?: number;
+    available_operations?: string[];
+    docs?: string;
+    quickstart?: string;
+  };
 }
 
 export interface ToolResult {

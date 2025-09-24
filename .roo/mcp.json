@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "mcp-docs-reference": {
+      "command": "node",
+      "args": [
+        "/Users/b.c.nims/mcp-docs/mcp-docs-server/build/index.js"
+      ],
+      "alwaysAllow": [
+        "mcp_docs_guide",
+        "search_docs",
+        "get_docs_by_category"
+      ]
+    }
+  }
+}

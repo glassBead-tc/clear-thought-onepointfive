@@ -90,13 +90,13 @@ async function handleMCTS(args: MCTSArgs, _session: SessionState) {
   };
 }
 
-ToolRegistry.getInstance().register({
-  name: 'mcts',
-  description: 'MCTS reasoning tool (iteration/bestAction/probs/export)',
-  schema: MCTSSchema,
-  handler: handleMCTS,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'mcts',
+//   description: 'MCTS reasoning tool (iteration/bestAction/probs/export)',
+//   schema: MCTSSchema,
+//   handler: handleMCTS,
+//   category: 'reasoning'
+// });
 
 export { handleMCTS };
 

@@ -50,12 +50,12 @@ async function handleCreativeThinking(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'creativethinking',
-  description: 'Apply creative thinking techniques for innovative problem-solving',
-  schema: CreativeThinkingSchema,
-  handler: handleCreativeThinking,
-  category: 'creative'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'creativethinking',
+//   description: 'Apply creative thinking techniques for innovative problem-solving',
+//   schema: CreativeThinkingSchema,
+//   handler: handleCreativeThinking,
+//   category: 'creative'
+// });
 
 export { handleCreativeThinking };

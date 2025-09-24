@@ -54,12 +54,12 @@ async function handleDecisionFramework(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'decisionframework',
-  description: 'Apply structured decision-making frameworks',
-  schema: DecisionFrameworkSchema,
-  handler: handleDecisionFramework,
-  category: 'metacognitive'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'decisionframework',
+//   description: 'Apply structured decision-making frameworks',
+//   schema: DecisionFrameworkSchema,
+//   handler: handleDecisionFramework,
+//   category: 'metacognitive'
+// });
 
 export { handleDecisionFramework };

@@ -1,4 +1,5 @@
 import { SessionState } from './SessionState.js';
+import { defaultConfig, type ServerConfig } from '../config.js';
 
 interface SessionInfo {
   id: string;
@@ -11,6 +12,11 @@ export class SessionManager {
   private sessions = new Map<string, SessionInfo>();
   private maxSessions = 100;
   private sessionTimeout = 3600000; // 1 hour
+  private config: ServerConfig;
+
+  constructor(config?: ServerConfig) {
+    this.config = config || defaultConfig;
+  }
 
   getOrCreateSession(sessionId: string): SessionInfo {
     if (this.sessions.has(sessionId)) {
@@ -26,7 +32,7 @@ export class SessionManager {
 
     const sessionInfo: SessionInfo = {
       id: sessionId,
-      state: new SessionState(sessionId, {} as any),
+      state: new SessionState(sessionId, this.config),
       createdAt: new Date(),
       lastAccessedAt: new Date()
     };

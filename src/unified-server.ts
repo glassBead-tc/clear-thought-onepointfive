@@ -7,26 +7,9 @@ import { ToolRegistry } from './registry/tool-registry.js';
 import { SessionManager } from './state/SessionManager.js';
 import type { ServerConfig } from './config.js';
 
-// Lazy tool module map (modules self-register on import)
+// Lazy tool module map (single unified tool)
 const TOOL_MODULES: Record<string, () => Promise<unknown>> = {
-  sequentialthinking: () => import('./tools/sequential-thinking.js'),
-  unifiedreasoning: () => import('./tools/unified-reasoning.js'),
-  treeofthought: () => import('./tools/tree-of-thought.js'),
-  graphofthought: () => import('./tools/graph-of-thought.js'),
-  beamsearch: () => import('./tools/beam-search.js'),
-  mcts: () => import('./tools/mcts.js'),
-  'mental-model': () => import('./tools/mental-model.js'),
-  'debugging-approach': () => import('./tools/debugging-approach.js'),
-  'collaborative-reasoning': () => import('./tools/collaborative-reasoning.js'),
-  'decision-framework': () => import('./tools/decision-framework.js'),
-  metacognitive: () => import('./tools/metacognitive.js'),
-  'scientific-method': () => import('./tools/scientific-method.js'),
-  'structured-argumentation': () => import('./tools/structured-argumentation.js'),
-  'visual-reasoning': () => import('./tools/visual-reasoning.js'),
-  'creative-thinking': () => import('./tools/creative-thinking.js'),
-  'systems-thinking': () => import('./tools/systems-thinking.js'),
-  'socratic-method': () => import('./tools/socratic-method.js'),
-  'session-management': () => import('./tools/session-management.js')
+  'unifiedreasoning': () => import('./tools/unified-reasoning.js')
 };
 
 export interface UnifiedServerOptions {
@@ -49,7 +32,7 @@ export class ClearThoughtUnifiedServer {
     };
     
     this.toolRegistry = ToolRegistry.getInstance();
-    this.sessionManager = new SessionManager();
+    this.sessionManager = new SessionManager(this.options.config);
     
     // Create MCP server
     this.mcpServer = new Server(
@@ -75,29 +58,50 @@ export class ClearThoughtUnifiedServer {
     }
     return 'stdio';
   }
-  
-  // No eager tool loading; tools are lazily imported at CallTool/ListTools time
+
   
   private setupHandlers(): void {
     // Tool execution handler - unified for all tools (lazy-load per call)
     this.mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
-      // Get or create session
-      const sessionId = (request as any).sessionId || randomUUID();
+      // 1. Check tool arguments for sessionId first (client-provided)
+      const toolSessionId = request.params.arguments?.sessionId;
+
+      // 2. Fall back to generating new session if not provided
+      const sessionId = (typeof toolSessionId === 'string' && toolSessionId) || randomUUID();
+
+      // 3. Get or create session (existing logic)
       const session = this.sessionManager.getOrCreateSession(sessionId);
-      
+
       // Ensure the requested tool's module is loaded (self-registers on import)
       const toolName = request.params.name;
       const loader = TOOL_MODULES[toolName];
       if (loader && !this.toolRegistry.has(toolName)) {
         await loader();
       }
-      
-      // Execute through registry
-      return this.toolRegistry.execute(
+
+      // 4. Execute through registry
+      const result = await this.toolRegistry.execute(
         request.params.name,
         request.params.arguments,
         session.state
       );
+
+      // 5. Inject sessionId into response content for client continuation
+      return {
+        ...result,
+        content: result.content.map(item => {
+          if (item.type === 'text') {
+            const data = JSON.parse(item.text);
+            data.sessionContext = {
+              ...data.sessionContext,
+              sessionId: sessionId, // Ensure sessionId is always returned
+              continuationInstructions: `To continue this reasoning session, include "sessionId": "${sessionId}" in your next tool call`
+            };
+            return { ...item, text: JSON.stringify(data) };
+          }
+          return item;
+        })
+      };
     });
     
     // List tools from registry (lazy-load modules at list time)
@@ -124,9 +128,6 @@ export class ClearThoughtUnifiedServer {
     await this.mcpServer.connect(transport);
     console.error('Clear Thought MCP Server (stdio) started');
   }
-  
-  // HTTP startup is intentionally omitted. When using HTTP, an external host or
-  // platform (e.g., Smithery) should own the HTTP listener and use the MCP transport.
   
   // For Smithery export
   getMcpServer(): Server {

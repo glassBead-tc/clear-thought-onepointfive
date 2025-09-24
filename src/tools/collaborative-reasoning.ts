@@ -10,7 +10,9 @@ const CollaborativeReasoningSchema = z.object({
     reasoning: z.string().describe('Reasoning behind the viewpoint')
   })).describe('Different perspectives from multiple agents'),
   synthesis: z.string().describe('Synthesis of all perspectives'),
-  consensus: z.string().optional().describe('Consensus reached, if any')
+  consensus: z.string().optional().describe('Consensus reached, if any'),
+  // NEW: Optional sessionId for continuation
+  sessionId: z.string().optional().describe('Session ID for continuing existing collaborative session')
 });
 
 export type CollaborativeReasoningArgs = z.infer<typeof CollaborativeReasoningSchema>;
@@ -46,12 +48,12 @@ async function handleCollaborativeReasoning(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'collaborativereasoning',
-  description: 'Enable multi-agent collaborative reasoning and perspective synthesis',
-  schema: CollaborativeReasoningSchema,
-  handler: handleCollaborativeReasoning,
-  category: 'collaborative'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'collaborativereasoning',
+//   description: 'Enable multi-agent collaborative reasoning and perspective synthesis',
+//   schema: CollaborativeReasoningSchema,
+//   handler: handleCollaborativeReasoning,
+//   category: 'collaborative'
+// });
 
 export { handleCollaborativeReasoning };

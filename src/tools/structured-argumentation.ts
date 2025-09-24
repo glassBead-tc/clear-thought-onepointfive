@@ -50,12 +50,12 @@ async function handleStructuredArgumentation(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'structuredargumentation',
-  description: 'Build and analyze structured logical arguments',
-  schema: StructuredArgumentationSchema,
-  handler: handleStructuredArgumentation,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'structuredargumentation',
+//   description: 'Build and analyze structured logical arguments',
+//   schema: StructuredArgumentationSchema,
+//   handler: handleStructuredArgumentation,
+//   category: 'reasoning'
+// });
 
 export { handleStructuredArgumentation };

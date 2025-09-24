@@ -93,12 +93,12 @@ async function handleSessionManagement(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'sessionmanagement',
-  description: 'Manage thinking session state - export, import, clear, and analyze',
-  schema: SessionManagementSchema,
-  handler: handleSessionManagement,
-  category: 'session'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'sessionmanagement',
+//   description: 'Manage thinking session state - export, import, clear, and analyze',
+//   schema: SessionManagementSchema,
+//   handler: handleSessionManagement,
+//   category: 'session'
+// });
 
 export { handleSessionManagement };

@@ -47,12 +47,12 @@ async function handleSocraticMethod(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'socraticmethod',
-  description: 'Use Socratic questioning to examine beliefs and uncover truth',
-  schema: SocraticMethodSchema,
-  handler: handleSocraticMethod,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'socraticmethod',
+//   description: 'Use Socratic questioning to examine beliefs and uncover truth',
+//   schema: SocraticMethodSchema,
+//   handler: handleSocraticMethod,
+//   category: 'reasoning'
+// });
 
 export { handleSocraticMethod };

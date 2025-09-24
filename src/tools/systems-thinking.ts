@@ -54,12 +54,12 @@ async function handleSystemsThinking(
 }
 
 // Self-register
-ToolRegistry.getInstance().register({
-  name: 'systemsthinking',
-  description: 'Analyze complex systems and their interactions',
-  schema: SystemsThinkingSchema,
-  handler: handleSystemsThinking,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'systemsthinking',
+//   description: 'Analyze complex systems and their interactions',
+//   schema: SystemsThinkingSchema,
+//   handler: handleSystemsThinking,
+//   category: 'reasoning'
+// });
 
 export { handleSystemsThinking };

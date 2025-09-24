@@ -128,13 +128,13 @@ async function handleGoT(args: GoTArgs, _session: SessionState) {
   };
 }
 
-ToolRegistry.getInstance().register({
-  name: 'graphofthought',
-  description: 'Graph-of-Thought reasoning tool (nodes/edges/analysis/merge/export)',
-  schema: GoTSchema,
-  handler: handleGoT,
-  category: 'reasoning'
-});
+// ToolRegistry.getInstance().register({
+//   name: 'graphofthought',
+//   description: 'Graph-of-Thought reasoning tool (nodes/edges/analysis/merge/export)',
+//   schema: GoTSchema,
+//   handler: handleGoT,
+//   category: 'reasoning'
+// });
 
 export { handleGoT };
 
